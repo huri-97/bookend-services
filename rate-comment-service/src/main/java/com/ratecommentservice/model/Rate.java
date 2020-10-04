@@ -11,15 +11,15 @@ public class Rate {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Long rateId;
-    private Long bookId;
-    private Long userId;
+    private String bookId;
+    private String username;
 
     private int rate;
 
 
-    public Rate(Long bookId, Long userId, int rate) {
+    public Rate(String bookId, String username, int rate) {
         this.bookId = bookId;
-        this.userId = userId;
+        this.username = username;
         this.rate = rate;
     }
 
@@ -29,20 +29,20 @@ public class Rate {
         return rateId;
     }
 
-    public Long getBookId() {
+    public String getBookId() {
         return bookId;
     }
 
-    public void setBookId(Long bookId) {
+    public void setBookId(String bookId) {
         this.bookId = bookId;
     }
 
-    public Long getUserId() {
-        return userId;
+    public String getUsername() {
+        return username;
     }
 
-    public void setUserId(Long userId) {
-        this.userId = userId;
+    public void setUsername(String userId) {
+        this.username = userId;
     }
 
     public int getRate() {
