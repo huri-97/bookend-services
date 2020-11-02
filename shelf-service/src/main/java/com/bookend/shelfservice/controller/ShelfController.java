@@ -1,6 +1,5 @@
 package com.bookend.shelfservice.controller;
 
-import com.bookend.shelfservice.model.Book;
 import com.bookend.shelfservice.model.ShelfsBook;
 import com.bookend.shelfservice.model.Shelf;
 import com.bookend.shelfservice.service.BookService;
@@ -11,13 +10,11 @@ import io.swagger.annotations.ApiResponses;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.oauth2.provider.OAuth2Authentication;
-import org.springframework.security.oauth2.provider.authentication.OAuth2AuthenticationDetails;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/shelf")
@@ -72,19 +69,17 @@ public class ShelfController {
         return newShelf ;
 
     }
-    @ApiOperation(value = "Get books in the shelf", response = Book.class)
+    @ApiOperation(value = "Get book ids in the shelf", response = String.class)
     @ApiResponses(value = {
             @ApiResponse(code = 200, message = "Successfully retrieved list"),
             @ApiResponse(code = 401, message = "You are not authorized to view the resource")
     }
     )
     @GetMapping("/{shelfid}")
-    public List<Book> getBooks(@PathVariable("shelfid")  String shelfID, OAuth2Authentication auth){
-        final OAuth2AuthenticationDetails details = (OAuth2AuthenticationDetails) auth.getDetails();
-        //token
-        String accessToken = details.getTokenValue();
+    public List<String> getBooks(@PathVariable("shelfid")  String shelfID){
 
-        return shelfService.getBooks(Long.valueOf(shelfID),accessToken);
+
+        return shelfService.getBooks(Long.valueOf(shelfID));
 
     }
     @ApiOperation(value = "Get user's shelves", response = Shelf.class)
@@ -99,15 +94,48 @@ public class ShelfController {
 
         return shelfService.findShelvesByUsername(username);
     }
+    @ApiOperation(value = "Get current user's shelves", response = Shelf.class)
+    @ApiResponses(value = {
+            @ApiResponse(code = 200, message = "Successfully retrieved list"),
+            @ApiResponse(code = 401, message = "You are not authorized to view the resource")
+    }
+
+    )
+    @GetMapping("/user")
+    public List<Shelf> getUserShelves( OAuth2Authentication auth){
+
+        return shelfService.findShelvesByUsername(auth.getName());
+    }
     @ApiOperation(value = "Delete the shelf")
     @ApiResponses(value = {
             @ApiResponse(code = 200, message = "Successfully deleted shelf"),
-            @ApiResponse(code = 401, message = "You are not authorized to delete the resource")
+            @ApiResponse(code = 401, message = "You are not authorized to delete the resource"),
+            @ApiResponse(code = 403, message = "The action is forbidden.")
     }
     )
     @DeleteMapping("/delete/{shelfid}")
-    public void deleteShelf(@PathVariable("shelfid")  String shelfID){
-         shelfService.deleteShelf(shelfService.getById(Long.valueOf(shelfID)));
+    public void deleteShelf(@PathVariable("shelfid")  String shelfID,OAuth2Authentication auth){
+        Shelf shelf = shelfService.getById(Long.valueOf(shelfID));
+        if(shelf.getUsername()!=auth.getName()){
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN,"The action is forbidden.");
+        }
+        shelfService.deleteShelf(shelfService.getById(Long.valueOf(shelfID)));
+    }
+    @ApiOperation(value = "Delete the book from shelves")
+    @ApiResponses(value = {
+            @ApiResponse(code = 200, message = "Successfully deleted book"),
+            @ApiResponse(code = 401, message = "You are not authorized to delete the resource"),
+            @ApiResponse(code = 403, message = "The action is forbidden.")
+    }
+    )
+    @DeleteMapping("/delete/{shelfid}/{bookid}")
+    public void deleteBook(@PathVariable("bookid") String bookId,
+                           @PathVariable("shelfid")  String shelfID,OAuth2Authentication auth){
+        Shelf shelf = shelfService.getById(Long.valueOf(shelfID));
+        if(shelf.getUsername()!=auth.getName()){
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN,"The action is forbidden.");
+        }
+        bookService.delete(bookId,shelfID);
     }
 
 }

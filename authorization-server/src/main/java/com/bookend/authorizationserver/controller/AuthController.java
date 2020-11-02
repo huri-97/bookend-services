@@ -12,7 +12,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("api/oauth")
+@RequestMapping("/oauth")
 public class AuthController {
 
     @Autowired
